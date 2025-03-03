@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <style>
         .chart-container {
-            width: 800px;
+            width: 100%;
             height: 600px;
             margin: 20px auto;
         }
@@ -43,7 +43,7 @@
                 myChart.update('none'); // 使用 'none' 模式使更新更流畅
             } else {
                 // 首次创建时生成固定的背景色
-                backgroundColor = `rgba(54, 162, 235, 0.5)`;
+                backgroundColor = `rgba(61, 55, 55, 0.5)`;
                 
                 // 首次创建图表
                 const ctx = document.getElementById('bubbleChart').getContext('2d');
@@ -54,7 +54,7 @@
                             label: '气泡数据',
                             data: dataPoints,
                             backgroundColor: backgroundColor,
-                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderColor: 'rgba(61, 55, 55, 1)',
                             borderWidth: 1,
                         }]
                     },
@@ -66,7 +66,14 @@
                                 max: 100,
                                 title: {
                                     display: true,
-                                    text: 'X 轴'
+                                    text: 'X 轴',
+                                    color: 'rgba(255, 255, 255, 0.8)'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.8)'
                                 }
                             },
                             y: {
@@ -74,12 +81,26 @@
                                 max: 100,
                                 title: {
                                     display: true,
-                                    text: 'Y 轴'
+                                    text: 'Y 轴',
+                                    color: 'rgba(255, 255, 255, 0.8)'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.8)'
                                 }
                             }
                         },
                         animation: {
                             duration: 0 // 禁用动画使更新更流畅
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'rgba(255, 255, 255, 0.8)'
+                                }
+                            }
                         }
                     }
                 });
