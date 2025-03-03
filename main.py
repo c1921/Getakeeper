@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import random
 import pathlib
 import asyncio
-from typing import List
+from typing import List, Dict
 import threading
 import time
 
@@ -16,6 +16,8 @@ app.mount("/templates", StaticFiles(directory="templates"), name="templates")
 
 # 存储数据点的全局变量
 data_points: List[dict] = []
+# 存储跟踪气泡的全局变量
+tracker_bubble: Dict = None
 # 控制数据生成的全局变量
 generation_state = {
     "points_generated": 0,
@@ -33,8 +35,9 @@ def generate_data_point() -> dict:
 
 def update_data_points():
     """更新数据点的x值并在6秒内生成新点"""
+    global tracker_bubble
     last_r_update = time.time()
-    generation_interval = 6 / 100  # 6秒内生成100个点的间隔
+    generation_interval = 6 / 50  # 6秒内生成100个点的间隔
 
     while True:
         current_time = time.time()
@@ -51,11 +54,17 @@ def update_data_points():
                 point["x"] = round(max(0, point["x"] - 0.15), 2)
         
         # 每0.6秒更新一次r值
-        if current_time - last_r_update >= 0.6:
+        if current_time - last_r_update >= 0.1:
             if data_points:  # 确保还有数据点
                 min_x_point = min(data_points, key=lambda p: p["x"])
+                # 更新跟踪气泡的位置
+                tracker_bubble = {
+                    "x": min_x_point["x"],
+                    "y": min_x_point["y"],
+                    "r": 5  # 固定大小
+                }
                 # 减小r值
-                min_x_point["r"] = round(max(0, min_x_point["r"] - 15), 2)
+                min_x_point["r"] = round(max(0, min_x_point["r"] - 1.5), 2)
                 # 如果r值为0，移除该数据点
                 if min_x_point["r"] == 0:
                     data_points.remove(min_x_point)
@@ -83,13 +92,17 @@ async def root():
 
 @app.get("/generate-data")
 def generate_data():
-    return data_points
+    return {
+        "main_data": data_points,
+        "tracker": [tracker_bubble] if tracker_bubble else []
+    }
 
 @app.post("/reset-data")
 def reset_data():
     """重置所有数据点"""
-    global data_points
+    global data_points, tracker_bubble
     data_points.clear()  # 清空现有数据点
+    tracker_bubble = None  # 清空跟踪气泡
     # 重置生成状态
     generation_state["start_time"] = time.time()
     generation_state["last_generation"] = time.time()
