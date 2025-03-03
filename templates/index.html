@@ -29,42 +29,77 @@
     </div>
 
     <script>
+        // 创建派生的气泡图类型
+        class TrackedBubble extends Chart.BubbleController {
+            draw() {
+                // 调用原始气泡图的绘制方法
+                super.draw(arguments);
+                
+                // 获取数据集的元数据
+                const meta = this.getMeta();
+                const targetIndex = this.chart.data.targetIndex;
+                
+                // 如果有有效的目标索引，绘制红框
+                if (targetIndex >= 0 && meta.data[targetIndex]) {
+                    const point = meta.data[targetIndex];
+                    const {x, y} = point.getProps(['x', 'y']);
+                    const {radius} = point.options;
+                    
+                    // 绘制红色方框
+                    const ctx = this.chart.ctx;
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x - radius, y - radius, 2 * radius, 2 * radius);
+                    ctx.restore();
+                }
+            }
+        }
+        
+        // 注册新的图表类型
+        TrackedBubble.id = 'trackedBubble';
+        TrackedBubble.defaults = Chart.BubbleController.defaults;
+        Chart.register(TrackedBubble);
+
         let myChart = null;
         let backgroundColor = null;
 
         async function updateChart() {
-            // 从后端获取数据
             const response = await fetch('/generate-data');
             const data = await response.json();
 
-            // 如果图表已存在，更新数据
             if (myChart) {
                 myChart.data.datasets[0].data = data.main_data;
-                myChart.data.datasets[1].data = data.tracker;
+                myChart.data.datasets[1].data = data.area_sums;
+                myChart.data.targetIndex = data.target_index;
                 myChart.update('none');
             } else {
-                // 首次创建时生成固定的背景色
                 backgroundColor = `rgba(61, 55, 55, 0.5)`;
-                
-                // 首次创建图表
                 const ctx = document.getElementById('bubbleChart').getContext('2d');
                 myChart = new Chart(ctx, {
-                    type: 'bubble',
                     data: {
+                        targetIndex: data.target_index,
                         datasets: [
                             {
+                                type: 'trackedBubble',
                                 label: '气泡数据',
                                 data: data.main_data,
                                 backgroundColor: backgroundColor,
                                 borderColor: 'rgba(61, 55, 55, 1)',
                                 borderWidth: 1,
+                                order: 0
                             },
                             {
-                                label: '跟踪气泡',
-                                data: data.tracker,
-                                backgroundColor: 'rgba(255, 0, 0, 0.3)',
-                                borderColor: 'rgba(255, 0, 0, 0.8)',
-                                borderWidth: 2,
+                                type: 'bar',
+                                label: '区域R值总和',
+                                data: data.area_sums,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                borderWidth: 1,
+                                order: 1,
+                                yAxisID: 'y2',
+                                barPercentage: 0.9,
+                                categoryPercentage: 0.9
                             }
                         ]
                     },
@@ -74,16 +109,21 @@
                             x: {
                                 min: 0,
                                 max: 100,
+                                offset: false,
+                                alignToPixels: true,
                                 title: {
                                     display: true,
                                     text: 'X 轴',
                                     color: 'rgba(255, 255, 255, 0.8)'
                                 },
                                 grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
+                                    color: 'rgba(255, 255, 255, 0.1)',
+                                    offset: false
                                 },
                                 ticks: {
-                                    color: 'rgba(255, 255, 255, 0.8)'
+                                    color: 'rgba(255, 255, 255, 0.8)',
+                                    stepSize: 5,
+                                    align: 'center'
                                 }
                             },
                             y: {
@@ -100,17 +140,25 @@
                                 ticks: {
                                     color: 'rgba(255, 255, 255, 0.8)'
                                 }
+                            },
+                            y2: {
+                                min: 0,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'R值总和',
+                                    color: 'rgba(75, 192, 192, 0.8)'
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                },
+                                ticks: {
+                                    color: 'rgba(75, 192, 192, 0.8)'
+                                }
                             }
                         },
                         animation: {
-                            duration: 0 // 禁用动画使更新更流畅
-                        },
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: 'rgba(255, 255, 255, 0.8)'
-                                }
-                            }
+                            duration: 0
                         }
                     }
                 });
@@ -122,10 +170,7 @@
             updateChart();
         }
 
-        // 页面加载时更新图表
         updateChart();
-
-        // 每 ms更新一次图表
         setInterval(updateChart, 1);
     </script>
 </body>
