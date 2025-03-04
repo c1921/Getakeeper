@@ -1,13 +1,14 @@
 # 存储游戏状态的全局变量
 from typing import List
 from .enemy import Enemy
+from .storage import load_data, save_gold
 
 # 玩家相关
 MAX_HEALTH = 100
 player_health: int = MAX_HEALTH
 game_over: bool = False
 exp: float = 0  # 经验值（本局）
-gold: int = 0  # 金币（全局，不重置）
+gold: int = load_data()["gold"]  # 从存档加载金币数据
 
 # 敌人相关
 enemies: List[Enemy] = []

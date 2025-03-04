@@ -64,3 +64,6 @@ dmypy.json
 # Coverage
 .coverage
 .coverage.*
+
+# Save files
+save/

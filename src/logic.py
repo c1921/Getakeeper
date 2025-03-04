@@ -2,6 +2,7 @@ import random
 import time
 from . import state
 from .enemy import create_enemy
+from .storage import save_gold  # 添加导入
 
 def calculate_area_sums():
     """计算每个区域的r值总和"""
@@ -57,6 +58,7 @@ def update_data_points():
                 # 击杀奖励
                 state.exp += enemy.stats.radius  # 经验值等于敌人初始半径
                 state.gold += int(enemy.stats.radius)  # 金币等于敌人初始半径取整
+                save_gold(state.gold)  # 保存金币数据
                 state.target_index = -1
             last_r_update = current_time
 
