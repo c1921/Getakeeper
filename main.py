@@ -3,12 +3,32 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import random
 import pathlib
-import asyncio
-from typing import List, Dict
+from typing import List
 import threading
 import time
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """服务生命周期管理"""
+    # 启动时执行
+    global target_index, player_health
+    generation_state["start_time"] = time.time()
+    generation_state["last_generation"] = time.time()
+    generation_state["last_area_update"] = time.time()
+    generation_state["points_generated"] = 0
+    target_index = -1
+    player_health = 100
+    
+    update_thread = threading.Thread(target=update_data_points, daemon=True)
+    update_thread.start()
+    
+    yield
+    
+    # 关闭时执行
+    pass
+
+app = FastAPI(lifespan=lifespan)
 
 # 挂载静态文件目录
 templates_path = pathlib.Path("templates")
@@ -97,22 +117,6 @@ def update_data_points():
             generation_state["last_area_update"] = current_time
             
         time.sleep(0.025)  # 25ms更新一次
-
-@app.on_event("startup")
-async def startup_event():
-    """服务启动时初始化数据并启动更新线程"""
-    global target_index, player_health
-    # 初始化生成状态
-    generation_state["start_time"] = time.time()
-    generation_state["last_generation"] = time.time()
-    generation_state["last_area_update"] = time.time()
-    generation_state["points_generated"] = 0
-    target_index = -1
-    player_health = 100
-    
-    # 启动更新线程
-    update_thread = threading.Thread(target=update_data_points, daemon=True)
-    update_thread.start()
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
