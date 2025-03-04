@@ -49,6 +49,8 @@ generation_state = {
     "start_time": 0,
     "last_area_update": 0
 }
+# 存储游戏状态
+game_over: bool = False
 
 def calculate_area_sums():
     """计算每个区域的r值总和"""
@@ -76,11 +78,15 @@ def generate_data_point() -> dict:
 
 def update_data_points():
     """更新数据点的x值并在6秒内生成新点"""
-    global area_sums, target_index, player_health
+    global area_sums, target_index, player_health, game_over
     last_r_update = time.time()
     generation_interval = 6 / 50  # 6秒内生成50个点的间隔
 
     while True:
+        if game_over:  # 如果游戏结束，停止更新
+            time.sleep(0.025)
+            continue
+            
         current_time = time.time()
         
         # 在6秒内生成新的数据点
@@ -93,11 +99,16 @@ def update_data_points():
         for point in data_points:
             if point["x"] > 0:
                 point["x"] = round(max(0, point["x"] - 0.15), 2)
-            # 如果到达x=0且距离上次造成伤害超过1秒，造成伤害
             elif current_time - point["last_damage_time"] >= 1:
-                player_health = max(0, player_health - 1)  # 每个点每秒造成1点伤害
+                player_health = max(0, player_health - 1)
                 point["last_damage_time"] = current_time
-        
+                if player_health == 0:
+                    game_over = True  # 设置游戏结束状态
+                    break
+
+        if game_over:  # 如果游戏结束，跳过后续更新
+            continue
+            
         # 每0.1秒更新一次r值和目标点
         if current_time - last_r_update >= 0.1:
             if data_points:
@@ -135,11 +146,12 @@ def generate_data():
 @app.post("/reset-data")
 def reset_data():
     """重置所有数据点"""
-    global data_points, area_sums, target_index, player_health
-    data_points.clear()  # 清空现有数据点
-    area_sums = []  # 清空区域总和
+    global data_points, area_sums, target_index, player_health, game_over
+    data_points.clear()
+    area_sums = []
     target_index = -1
     player_health = 100
+    game_over = False  # 重置游戏状态
     # 重置生成状态
     generation_state["start_time"] = time.time()
     generation_state["last_generation"] = time.time()
