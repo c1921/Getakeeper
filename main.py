@@ -20,6 +20,8 @@ data_points: List[dict] = []
 area_sums: List[dict] = []
 # 存储当前目标点的索引
 target_index: int = -1
+# 存储玩家生命值
+player_health: int = 100
 # 控制数据生成的全局变量
 generation_state = {
     "points_generated": 0,
@@ -48,12 +50,13 @@ def generate_data_point() -> dict:
     return {
         "x": 100,  # 固定初始x值为100
         "y": round(random.uniform(0, 100), 2),
-        "r": round(random.uniform(1, 10), 2)
+        "r": round(random.uniform(1, 10), 2),
+        "last_damage_time": 0  # 添加上次造成伤害的时间
     }
 
 def update_data_points():
     """更新数据点的x值并在6秒内生成新点"""
-    global area_sums, target_index
+    global area_sums, target_index, player_health
     last_r_update = time.time()
     generation_interval = 6 / 50  # 6秒内生成50个点的间隔
 
@@ -66,10 +69,14 @@ def update_data_points():
             generation_state["points_generated"] += 1
             generation_state["last_generation"] = current_time
         
-        # 更新所有点的x值
+        # 更新所有点的x值并处理伤害
         for point in data_points:
             if point["x"] > 0:
                 point["x"] = round(max(0, point["x"] - 0.15), 2)
+            # 如果到达x=0且距离上次造成伤害超过1秒，造成伤害
+            elif current_time - point["last_damage_time"] >= 1:
+                player_health = max(0, player_health - 1)  # 每个点每秒造成1点伤害
+                point["last_damage_time"] = current_time
         
         # 每0.1秒更新一次r值和目标点
         if current_time - last_r_update >= 0.1:
@@ -94,13 +101,14 @@ def update_data_points():
 @app.on_event("startup")
 async def startup_event():
     """服务启动时初始化数据并启动更新线程"""
-    global target_index
+    global target_index, player_health
     # 初始化生成状态
     generation_state["start_time"] = time.time()
     generation_state["last_generation"] = time.time()
     generation_state["last_area_update"] = time.time()
     generation_state["points_generated"] = 0
     target_index = -1
+    player_health = 100
     
     # 启动更新线程
     update_thread = threading.Thread(target=update_data_points, daemon=True)
@@ -116,16 +124,18 @@ def generate_data():
     return {
         "main_data": data_points,
         "area_sums": area_sums,
-        "target_index": target_index
+        "target_index": target_index,
+        "player_health": player_health
     }
 
 @app.post("/reset-data")
 def reset_data():
     """重置所有数据点"""
-    global data_points, area_sums, target_index
+    global data_points, area_sums, target_index, player_health
     data_points.clear()  # 清空现有数据点
     area_sums = []  # 清空区域总和
     target_index = -1
+    player_health = 100
     # 重置生成状态
     generation_state["start_time"] = time.time()
     generation_state["last_generation"] = time.time()

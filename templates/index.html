@@ -18,15 +18,44 @@
             text-align: center;
             margin: 20px;
         }
+        .health-bar {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .health-bar-inner {
+            height: 20px;
+            background-color: #dc3545;
+            transition: width 0.3s ease;
+        }
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(48, 27, 29, 0.9);
+            padding: 20px 40px;
+            border-radius: 8px;
+            color: white;
+            font-size: 24px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="controls">
-        <button onclick="resetData()">重置数据</button>
+        <button onclick="resetData()" class="btn btn-primary">重置数据</button>
+    </div>
+    <div class="health-bar">
+        <div class="health-bar-inner" style="width: 100%"></div>
     </div>
     <div class="chart-container">
         <canvas id="bubbleChart"></canvas>
     </div>
+    <div class="game-over">END</div>
 
     <script>
         // 创建派生的气泡图类型
@@ -63,10 +92,21 @@
 
         let myChart = null;
         let backgroundColor = null;
+        let gameOver = false;
 
         async function updateChart() {
             const response = await fetch('/generate-data');
             const data = await response.json();
+
+            // 更新生命值进度条
+            const healthBar = document.querySelector('.health-bar-inner');
+            healthBar.style.width = `${data.player_health}%`;
+
+            // 检查游戏结束
+            if (data.player_health === 0 && !gameOver) {
+                gameOver = true;
+                document.querySelector('.game-over').style.display = 'block';
+            }
 
             if (myChart) {
                 myChart.data.datasets[0].data = data.main_data;
@@ -167,6 +207,8 @@
 
         async function resetData() {
             await fetch('/reset-data', { method: 'POST' });
+            gameOver = false;
+            document.querySelector('.game-over').style.display = 'none';
             updateChart();
         }
 
