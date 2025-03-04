@@ -9,11 +9,11 @@
 <body class="h-100 d-flex flex-column">
     <div class="container-fluid d-flex flex-column h-100 py-3">
         <div class="text-center mb-3">
-            <button onclick="resetData()" class="btn btn-primary">重置数据</button>
+            <button onclick="resetData()" class="btn btn-secondary">重置数据</button>
         </div>
 
         <div class="progress mb-3" style="height: 20px;">
-            <div class="progress-bar bg-danger" role="progressbar"></div>
+            <div class="progress-bar bg-secondary" role="progressbar"></div>
         </div>
 
         <div class="flex-grow-1" style="min-height: 0;">
@@ -21,8 +21,8 @@
         </div>
     </div>
 
-    <div class="position-fixed top-50 start-50 translate-middle p-4 rounded bg-danger bg-opacity-75 d-none">
-        <p class="text-white m-0">END</p>
+    <div id="gameOverModal" class="position-fixed top-50 start-50 translate-middle p-4 rounded bg-secondary bg-opacity-75 d-none">
+        <p class="m-0">END</p>
     </div>
 
     <script>
@@ -73,7 +73,7 @@
             // 检查游戏结束
             if (data.player_health === 0 && !gameOver) {
                 gameOver = true;
-                document.querySelector('.bg-danger.position-fixed').classList.remove('d-none');
+                document.getElementById('gameOverModal').classList.remove('d-none');
             }
 
             if (myChart) {
@@ -177,7 +177,7 @@
         async function resetData() {
             await fetch('/reset-data', { method: 'POST' });
             gameOver = false;
-            document.querySelector('.bg-danger.position-fixed').classList.add('d-none');
+            document.getElementById('gameOverModal').classList.add('d-none');
             updateChart();
         }
 
