@@ -1,14 +1,15 @@
 import random
 import time
 from . import state
+from .enemy import create_enemy
 
 def calculate_area_sums():
     """计算每个区域的r值总和"""
     areas = []
     for i in range(0, 100, 10):
         area_sum = sum(
-            point["r"] for point in state.data_points 
-            if i <= point["x"] < i + 10
+            enemy.r for enemy in state.enemies 
+            if i <= enemy.x < i + 10
         )
         areas.append({
             "x": i + 5,
@@ -16,17 +17,8 @@ def calculate_area_sums():
         })
     return areas
 
-def generate_data_point() -> dict:
-    """生成单个数据点"""
-    return {
-        "x": 100,
-        "y": round(random.uniform(0, 100), 2),
-        "r": round(random.uniform(1, 10), 2),
-        "last_damage_time": 0
-    }
-
 def update_data_points():
-    """更新数据点的x值并在6秒内生成新点"""
+    """更新数据点并在6秒内生成新点"""
     last_r_update = time.time()
     generation_interval = 6 / 50
 
@@ -37,17 +29,17 @@ def update_data_points():
             
         current_time = time.time()
         
+        # 生成新敌人
         if state.generation_state["points_generated"] < 100 and current_time - state.generation_state["last_generation"] >= generation_interval:
-            state.data_points.append(generate_data_point())
+            state.enemies.append(create_enemy())  # 使用工厂函数创建敌人
             state.generation_state["points_generated"] += 1
             state.generation_state["last_generation"] = current_time
         
-        for point in state.data_points:
-            if point["x"] > 0:
-                point["x"] = round(max(0, point["x"] - 0.15), 2)
-            elif current_time - point["last_damage_time"] >= 1:
+        # 更新敌人
+        for i, enemy in enumerate(state.enemies):
+            enemy.update_position()
+            if enemy.deal_damage():
                 state.player_health = max(0, state.player_health - 1)
-                point["last_damage_time"] = current_time
                 if state.player_health == 0:
                     state.game_over = True
                     break
@@ -55,15 +47,17 @@ def update_data_points():
         if state.game_over:
             continue
             
-        if current_time - last_r_update >= 0.1:
-            if state.data_points:
-                state.target_index = min(range(len(state.data_points)), key=lambda i: state.data_points[i]["x"])
-                state.data_points[state.target_index]["r"] = round(max(0, state.data_points[state.target_index]["r"] - 1.5), 2)
-                if state.data_points[state.target_index]["r"] == 0:
-                    state.data_points.pop(state.target_index)
-                    state.target_index = -1
-                last_r_update = current_time
+        # 更新目标敌人
+        if current_time - last_r_update >= 0.1 and state.enemies:
+            state.target_index = min(range(len(state.enemies)), key=lambda i: state.enemies[i].x)
+            state.enemies[state.target_index].reduce_radius()
+            
+            if state.enemies[state.target_index].is_dead():
+                state.enemies.pop(state.target_index)
+                state.target_index = -1
+            last_r_update = current_time
 
+        # 更新区域总和
         if current_time - state.generation_state["last_area_update"] >= 0.5:
             state.area_sums = calculate_area_sums()
             state.generation_state["last_area_update"] = current_time

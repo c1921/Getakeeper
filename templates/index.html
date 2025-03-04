@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN" data-bs-theme="dark" class="h-100">
 <head>
-    <title>气泡图示例</title>
+    <title>Getakeeper</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
@@ -9,7 +9,7 @@
 <body class="h-100 d-flex flex-column">
     <div class="container-fluid d-flex flex-column h-100 py-3">
         <div class="text-center mb-3">
-            <button onclick="resetData()" class="btn btn-secondary">重置数据</button>
+            <button type="button" class="btn btn-outline-primary" onclick="resetData()">重置数据</button>
         </div>
 
         <div class="progress mb-3" style="height: 20px;">
@@ -81,8 +81,9 @@
             }
 
             if (myChart) {
-                myChart.data.datasets[0].data = data.main_data;
-                myChart.data.datasets[1].data = data.area_sums;
+                myChart.data.datasets[0].data = data.normal_enemies;
+                myChart.data.datasets[1].data = data.fast_enemies;
+                myChart.data.datasets[2].data = data.area_sums;
                 myChart.data.targetIndex = data.target_index;
                 myChart.update('none');
             } else {
@@ -94,10 +95,19 @@
                         datasets: [
                             {
                                 type: 'trackedBubble',
-                                label: '气泡数据',
-                                data: data.main_data,
-                                backgroundColor: backgroundColor,
+                                label: '普通敌人',
+                                data: data.normal_enemies,
+                                backgroundColor: 'rgba(61, 55, 55, 0.5)',
                                 borderColor: 'rgba(61, 55, 55, 1)',
+                                borderWidth: 1,
+                                order: 0
+                            },
+                            {
+                                type: 'trackedBubble',
+                                label: '快速敌人',
+                                data: data.fast_enemies,
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
                                 borderWidth: 1,
                                 order: 0
                             },
@@ -122,6 +132,9 @@
                         plugins: {
                             tooltip: {
                                 enabled: false
+                            },
+                            legend: {
+                                display: false
                             }
                         },
                         scales: {
