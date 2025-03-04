@@ -6,7 +6,7 @@ import threading
 import time
 from contextlib import asynccontextmanager
 from src import state, logic
-from src.enemy import Enemy, EnemyType
+from src.enemy import EnemyType
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -17,7 +17,7 @@ async def lifespan(_: FastAPI):
     state.generation_state["last_area_update"] = time.time()
     state.generation_state["points_generated"] = 0
     state.target_index = -1
-    state.player_health = state.MAX_HEALTH
+    state.player.reset()  # 使用玩家的重置方法
     
     update_thread = threading.Thread(target=logic.update_data_points, daemon=True)
     update_thread.start()
@@ -49,10 +49,10 @@ def generate_data():
         "fast_enemies": fast_enemies,
         "area_sums": state.area_sums,
         "target_index": state.target_index,
-        "player_health": state.player_health,
-        "max_health": state.MAX_HEALTH,
-        "exp": state.exp,
-        "gold": state.gold
+        "player_health": state.player.health,
+        "max_health": state.player.stats.max_health,
+        "exp": state.player.exp,
+        "gold": state.player.gold
     }
 
 @app.post("/reset-data")
@@ -61,13 +61,10 @@ def reset_data():
     state.enemies.clear()
     state.area_sums = []
     state.target_index = -1
-    state.player_health = state.MAX_HEALTH
-    state.game_over = False
-    state.exp = 0  # 重置经验值
-    # 不重置金币 state.gold
+    state.player.reset()  # 使用玩家的重置方法
     
     state.generation_state["start_time"] = time.time()
     state.generation_state["last_generation"] = time.time()
     state.generation_state["last_area_update"] = time.time()
     state.generation_state["points_generated"] = 0
-    return {"status": "success"}
+    return {"status": "success"} 
