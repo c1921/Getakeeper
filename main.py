@@ -50,7 +50,9 @@ def generate_data():
         "area_sums": state.area_sums,
         "target_index": state.target_index,
         "player_health": state.player_health,
-        "max_health": state.MAX_HEALTH
+        "max_health": state.MAX_HEALTH,
+        "exp": state.exp,
+        "gold": state.gold
     }
 
 @app.post("/reset-data")
@@ -61,6 +63,8 @@ def reset_data():
     state.target_index = -1
     state.player_health = state.MAX_HEALTH
     state.game_over = False
+    state.exp = 0  # 重置经验值
+    # 不重置金币 state.gold
     
     state.generation_state["start_time"] = time.time()
     state.generation_state["last_generation"] = time.time()

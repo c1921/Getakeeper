@@ -53,7 +53,10 @@ def update_data_points():
             state.enemies[state.target_index].reduce_radius()
             
             if state.enemies[state.target_index].is_dead():
-                state.enemies.pop(state.target_index)
+                enemy = state.enemies.pop(state.target_index)
+                # 击杀奖励
+                state.exp += enemy.stats.radius  # 经验值等于敌人初始半径
+                state.gold += int(enemy.stats.radius)  # 金币等于敌人初始半径取整
                 state.target_index = -1
             last_r_update = current_time
 

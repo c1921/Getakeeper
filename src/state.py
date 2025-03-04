@@ -6,6 +6,8 @@ from .enemy import Enemy
 MAX_HEALTH = 100
 player_health: int = MAX_HEALTH
 game_over: bool = False
+exp: float = 0  # 经验值（本局）
+gold: int = 0  # 金币（全局，不重置）
 
 # 敌人相关
 enemies: List[Enemy] = []
