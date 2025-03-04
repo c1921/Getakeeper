@@ -39,7 +39,7 @@ def update_data_points():
         for i, enemy in enumerate(state.enemies):
             enemy.update_position()
             if enemy.deal_damage():
-                state.player_health = max(0, state.player_health - 1)
+                state.player_health = max(0, state.player_health - enemy.stats.damage)
                 if state.player_health == 0:
                     state.game_over = True
                     break

@@ -6,7 +6,7 @@ import threading
 import time
 from contextlib import asynccontextmanager
 from src import state, logic
-from src.enemy import NormalEnemy, FastEnemy
+from src.enemy import Enemy, EnemyType
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -41,8 +41,8 @@ async def root():
 @app.get("/generate-data")
 def generate_data():
     # 将敌人按类型分组
-    normal_enemies = [e.to_dict() for e in state.enemies if isinstance(e, NormalEnemy)]
-    fast_enemies = [e.to_dict() for e in state.enemies if isinstance(e, FastEnemy)]
+    normal_enemies = [e.to_dict() for e in state.enemies if e.enemy_type == EnemyType.NORMAL]
+    fast_enemies = [e.to_dict() for e in state.enemies if e.enemy_type == EnemyType.FAST]
     
     return {
         "normal_enemies": normal_enemies,
@@ -56,7 +56,7 @@ def generate_data():
 @app.post("/reset-data")
 def reset_data():
     """重置所有数据点"""
-    state.enemies.clear()  # 清空敌人列表
+    state.enemies.clear()
     state.area_sums = []
     state.target_index = -1
     state.player_health = state.MAX_HEALTH

@@ -1,6 +1,6 @@
 # 存储游戏状态的全局变量
 from typing import List
-from .enemy import BaseEnemy
+from .enemy import Enemy
 
 # 玩家相关
 MAX_HEALTH = 100
@@ -8,7 +8,7 @@ player_health: int = MAX_HEALTH
 game_over: bool = False
 
 # 敌人相关
-enemies: List[BaseEnemy] = []
+enemies: List[Enemy] = []
 area_sums: List[dict] = []
 target_index: int = -1
 
