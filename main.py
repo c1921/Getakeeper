@@ -41,7 +41,8 @@ area_sums: List[dict] = []
 # 存储当前目标点的索引
 target_index: int = -1
 # 存储玩家生命值
-player_health: int = 100
+MAX_HEALTH = 100  # 新增最大生命值常量
+player_health: int = MAX_HEALTH
 # 控制数据生成的全局变量
 generation_state = {
     "points_generated": 0,
@@ -140,7 +141,8 @@ def generate_data():
         "main_data": data_points,
         "area_sums": area_sums,
         "target_index": target_index,
-        "player_health": player_health
+        "player_health": player_health,
+        "max_health": MAX_HEALTH  # 添加最大生命值到响应中
     }
 
 @app.post("/reset-data")
